@@ -1,0 +1,6 @@
+pygnssutils==1.0.2
+pynmeagps==1.0.18
+pyrtcm==1.0.3
+pyserial==3.5
+pyubx2==1.2.21
+PyYAML==6.0
