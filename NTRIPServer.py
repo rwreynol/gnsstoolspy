@@ -46,6 +46,9 @@ def main():
 
     if sucess:
         print('Setting up the ntrip server')
+
+        os.environ['PYGPSCLIENT_USER'] = settings['ntrip']['user']
+        os.environ['PYGPSCLIENT_PASSWORD'] = settings['ntrip']['password']
         try:
             args = {
                     'app': None,
