@@ -11,6 +11,10 @@ class BaseStation(object):
         self.ref = ()
         self._rtcm = rtcm_msgs
         self._conn_type = conn
+        #print(gnss_type)
+        #print('rtcm',self._rtcm,rtcm_msgs)
+        #print(mode)
+        #print(self._conn_type)
 
         if mode == 'fixed':
             print('Setting to fixed')
@@ -29,7 +33,7 @@ class BaseStation(object):
         rtcm_config_msg = self._setup(self._rtcm)
 
         if self._mode == 2:
-            base_config_msg = self._fixed(lat,lon,alt)
+            base_config_msg = self._fixed(lat,lon,alt,acc_limit)
         else:
             base_config_msg = self._survey_in(survey_min_s,acc_limit)
 
@@ -54,8 +58,11 @@ class BaseStation(object):
         layers = 1  # 1 = RAM, 2 = BBR, 4 = Flash (can be OR'd)
         transaction = 0
         cfg_data = []
+        #print(msgs)
         for rtcm_type in msgs:
-            cfg = f"CFG_MSGOUT_RTCM_3X_TYPE{rtcm_type}_{self._conn_type}"
+            cfg = 'CFG_MSGOUT_RTCM_3X_TYPE%s_%s' % (rtcm_type,self._conn_type)
+            #print(cfg)
+            #cfg = f"CFG_MSGOUT_RTCM_3X_TYPE{rtcm_type}_{self._conn_type}"
             cfg_data.append([cfg, 1])
 
         return UBXMessage.config_set(layers, transaction, cfg_data)
@@ -79,7 +86,7 @@ class BaseStation(object):
 
         return UBXMessage.config_set(layers, transaction, cfg_data)
 
-    def _fixed(self,lat,lon,height) -> UBXMessage:
+    def _fixed(self,lat,lon,height,acc_limit) -> UBXMessage:
         """
         Configure Fixed mode with specified coordinates.
         """
@@ -118,7 +125,7 @@ class BaseStation(object):
 
 class ZEDF9PBase(BaseStation):
 
-    def __init(self,mode:str='fixed',conn:str='USB'):
+    def __init__(self,mode:str='fixed',conn:str='USB'):
         super().__init__('ZED-F9P',# gps model
             ('1005','1077','1087','1097','1127','1230','4072_0','4072_1'), # rtcm messages
             mode,
