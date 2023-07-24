@@ -1,10 +1,9 @@
 from threading import Thread
 
 import socket
-import time
 import base64
 
-class Corrections(Thread):
+class gnss_corrections(Thread):
 
     def __init__(self):
         super().__init__()
@@ -38,7 +37,7 @@ class Corrections(Thread):
     def new_rtcm(self):
         pass
 
-class NTRIPCorrections(Corrections):
+class ntrip_corrections(gnss_corrections):
     ENCODING = 'ascii'
 
     def __init__(self,host,mountpoint,user,password,port=2101,org=''):
@@ -85,17 +84,3 @@ class NTRIPCorrections(Corrections):
         self._conn.close()
         print('Closed %s' % str(self._addr))
         super().__init__()
-    
-if __name__ == '__main__':
-    gnss_cors = NTRIPCorrections('20.185.11.35','VTOX_RTCM3',
-                                 'rwreynol','rre216',org='EMSG')
-    gnss_cors.start()
-    time.sleep(1)
-
-    t0 = time.time()
-
-    while (time.time() - t0) < 10:
-        time.sleep(1)
-
-    gnss_cors.stop()
-        
