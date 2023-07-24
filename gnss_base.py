@@ -3,10 +3,9 @@ from math import trunc
 from serial import Serial
 import time
 
-class BaseStation(object):
+class ublox_base(object):
     _modes = ('SURVEY-IN','FIXED')
     _layer = 1 # 1 = RAM, 2 = BBR, 4 = Flash (can be OR'd)
-
 
     def __init__(self,gnss_type:str,rtcm_msgs:tuple,mode:str='fixed',conn:str='USB'):
         self.type = gnss_type
@@ -121,7 +120,7 @@ class BaseStation(object):
 
         return UBXMessage.config_set(self._layer, transaction, cfg_data)
 
-class ZEDF9PBase(BaseStation):
+class zedf9p_base(ublox_base):
 
     def __init__(self,mode:str='fixed',conn:str='USB'):
         super().__init__('ZED-F9P',# gps model
