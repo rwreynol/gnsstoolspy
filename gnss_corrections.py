@@ -3,12 +3,25 @@ from threading import Thread
 import socket
 import base64
 
+class corrections_interface(object):
+
+    def new_rtcm(self):
+        pass
+
 class gnss_corrections(Thread):
 
     def __init__(self):
         super().__init__()
         self._conn = None
         self._connected = False
+        self._listeners = []
+
+    def add_listener(self,listener):
+        self._listeners.append(listener)
+
+    def send_rtcm(self,msg):
+        for l in self._listeners:
+            l.new_rtcm(msg)
 
     def connect(self):
         pass
@@ -30,7 +43,7 @@ class gnss_corrections(Thread):
 
         while self._connected:
             msg = self.receive()
-            print(msg)
+            self.send_rtcm(msg)
 
         self.disconnect()
 

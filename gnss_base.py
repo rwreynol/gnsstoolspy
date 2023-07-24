@@ -5,6 +5,8 @@ import time
 
 class BaseStation(object):
     _modes = ('SURVEY-IN','FIXED')
+    _layer = 1 # 1 = RAM, 2 = BBR, 4 = Flash (can be OR'd)
+
 
     def __init__(self,gnss_type:str,rtcm_msgs:tuple,mode:str='fixed',conn:str='USB'):
         self.type = gnss_type
@@ -17,7 +19,7 @@ class BaseStation(object):
         #print(self._conn_type)
 
         if mode == 'fixed':
-            print('Setting to fixed')
+            print('Setting to fixed position')
             self._mode = 2
         elif mode == 'survey-in':
             print('Setting to survey-in')
@@ -55,7 +57,6 @@ class BaseStation(object):
 
     def _setup(self,msgs) -> UBXMessage:
         print("\nFormatting RTCM MSGOUT CFG-VALSET message...")
-        layers = 1  # 1 = RAM, 2 = BBR, 4 = Flash (can be OR'd)
         transaction = 0
         cfg_data = []
         #print(msgs)
@@ -65,7 +66,7 @@ class BaseStation(object):
             #cfg = f"CFG_MSGOUT_RTCM_3X_TYPE{rtcm_type}_{self._conn_type}"
             cfg_data.append([cfg, 1])
 
-        return UBXMessage.config_set(layers, transaction, cfg_data)
+        return UBXMessage.config_set(self._layer, transaction, cfg_data)
 
     def _survey_in(self,svin_min_dur:float,acc_limit:float) -> UBXMessage:
         """
@@ -73,8 +74,6 @@ class BaseStation(object):
         """
 
         print("\nFormatting SVIN TMODE CFG-VALSET message...")
-        tmode = self._mode
-        layers = 1
         transaction = 0
         acc_limit = int(round(acc_limit / 0.1, 0))
         cfg_data = [
@@ -84,7 +83,7 @@ class BaseStation(object):
             (f"CFG_MSGOUT_UBX_NAV_SVIN_{self._conn_type}", 1),
         ]
 
-        return UBXMessage.config_set(layers, transaction, cfg_data)
+        return UBXMessage.config_set(self._layer, transaction, cfg_data)
 
     def _fixed(self,lat,lon,height,acc_limit) -> UBXMessage:
         """
@@ -93,7 +92,6 @@ class BaseStation(object):
 
         print("\nFormatting FIXED TMODE CFG-VALSET message...")
         pos_type = 1  # LLH (as opposed to ECEF)
-        layers = 1
         transaction = 0
         acc_limit = int(round(acc_limit / 0.1, 0))
 
@@ -121,7 +119,7 @@ class BaseStation(object):
             ("CFG_TMODE_LON_HP", lon_hp),
         ]
 
-        return UBXMessage.config_set(layers, transaction, cfg_data)
+        return UBXMessage.config_set(self._layer, transaction, cfg_data)
 
 class ZEDF9PBase(BaseStation):
 

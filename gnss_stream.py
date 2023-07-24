@@ -1,5 +1,6 @@
 from threading import Thread
 from pyubx2 import UBXReader
+from gnss_corrections import corrections_interface
 
 import math
 
@@ -11,7 +12,7 @@ class gnss_interface(object):
     def new_gnss(self):
         pass
 
-class gnss(Thread):
+class gnss(Thread,corrections_interface):
 
     def __init__(self):
         super().__init__()
@@ -26,7 +27,14 @@ class gnss(Thread):
         for l in self._listeners:
             l.new_gnss(msg)
 
+    def new_rtcm(self,msg):
+        print('overriding stuff')
+        self.write(msg)
+
     def connect(self):
+        pass
+
+    def write(self,msg):
         pass
 
     def disconnect(self):
@@ -73,6 +81,7 @@ class serial_gnss(gnss):
     def disconnect(self):
         try:
             self._conn.close()
+            self._conn = None
             print('Disconnected from gnss stream')
         except Exception:
             print('Error closing serial gps')
@@ -92,3 +101,8 @@ class serial_gnss(gnss):
             print(str(e))
             print('error reading serial gps')
             return None
+        
+    def write(self,msg):
+        if self._conn is not None:
+            print('writing rtcm corrections')
+            self._conn.write(msg)
