@@ -1,4 +1,5 @@
 from threading import Thread
+from pyrtcm import RTCMReader
 
 import socket
 import base64
@@ -41,14 +42,15 @@ class gnss_corrections(Thread):
 
         print('Connected: %s' % str(self._connected))
 
+        #while self._connected:
+        rtr = RTCMReader(self._conn)
+
         while self._connected:
-            msg = self.receive()
-            self.send_rtcm(msg)
+            (raw,msg) = rtr.read()
+            print('Received RTCM' + msg.identity)
+            self.send_rtcm(raw)
 
         self.disconnect()
-
-    def new_rtcm(self):
-        pass
 
 class ntrip_corrections(gnss_corrections):
     ENCODING = 'ascii'
@@ -59,6 +61,7 @@ class ntrip_corrections(gnss_corrections):
         self._source = self.sourcetable(host,mountpoint,user,password,port,org).encode(self.ENCODING)
 
         self._addr = (host,port)
+        self._parser = None
 
     def sourcetable(self,host,mount,user,password,port,org):
         return ('GET / HTTP/1.0\r\n' +
@@ -77,6 +80,7 @@ class ntrip_corrections(gnss_corrections):
             'Connection: close\r\n\r\n'
     
     def connect(self):
+        print('Attempting to connect to %s' % str(self._addr))
         self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._conn.connect(self._addr)
         self._conn.send(self._header)
@@ -90,8 +94,9 @@ class ntrip_corrections(gnss_corrections):
 
     def receive(self):
         if self._conn is not None:
-            return self._conn.recv(2048)
-        else: return None
+            return self._conn.recv(1024)
+        else:
+            return None
 
     def disconnect(self):
         self._conn.close()

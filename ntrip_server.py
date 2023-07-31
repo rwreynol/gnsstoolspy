@@ -1,6 +1,6 @@
+from gnss_ntrip import ntrip_server, ntrip_handler
 from gnss_corrections import ntrip_corrections
 
-import time
 import yaml
 
 def main():
@@ -15,6 +15,13 @@ def main():
         print('error reading settings file')
         return
     
+    addr = (settings['server']['address'],settings['server']['port'])
+    server = ntrip_server(settings['server']['user'],
+                          settings['server']['password'],
+                          settings['server']['mountpoint'],
+                          (settings['server']['lat'],settings['server']['lon']),
+                           1,addr,ntrip_handler)
+    
     gnss_cors = ntrip_corrections(settings['corrections']['connection']['address'],
                                   settings['corrections']['connection']['mountpoint'],
                                   settings['corrections']['connection']['user'],
@@ -22,9 +29,16 @@ def main():
                                   settings['corrections']['connection']['port'],
                                   org='EMSG')
     gnss_cors.start()
-    time.sleep(10)
 
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print('User Teminating Server')
+    
     gnss_cors.stop()
+    gnss_cors.join()
+
+    server.server_close()
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 from positioning_outstream import positioning_file
-from gnss_stream import serial_gnss
+from gnss_stream import locosys_gnss, serial_gnss
 from gnss_corrections import ntrip_corrections
 
 import time
@@ -24,8 +24,10 @@ def main():
                             settings['corrections']['connection']['port'],
                             org='EMSG')
     
-    gnss = serial_gnss(settings['gnss']['connection']['port'],
+    gnss = locosys_gnss(settings['gnss']['connection']['port'],
                        settings['gnss']['connection']['baud'])
+    #gnss = serial_gnss(settings['gnss']['connection']['port'],
+    #                   settings['gnss']['connection']['baud'])
     
     file = positioning_file('out.txt')
 
@@ -41,8 +43,8 @@ def main():
     time.sleep(10)
 
     # stop all threads
-    gnss.stop()
     rtcm.stop()
+    gnss.stop()
 
     # wait for all threads to stop and close file
     if gnss.is_alive(): gnss.join()

@@ -2,26 +2,28 @@ from gnss_stream import gnss_interface
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import time
+from gnss_nmea import nmea_parser
+
 
 class positiong_outstream(gnss_interface):
 
     def __init__(self):
         pass
 
-class positioning_file(gnss_interface):
+class positioning_file(positiong_outstream):
 
     def __init__(self,filename):
         self._name = filename
 
         self._file = open(self._name,'w')
-        self._file.write('cpu_time,timestamp,lat_deg,lon_deg,alt_m,fix,num_sats\r\n')
+        #self._file.write('cpu_time,timestamp,lat_deg,lon_deg,alt_m,fix,num_sats\r\n')
 
-    def new_gnss(self,msg):
+    def new_gnss(self,t,msg):
         try:
-            self._file.write( ('%f,%s,%f,%f,%f,%d,%d\r\n' % msg) )
+            self._file.write( '%f %s' % (t,msg.decode()) )
         except Exception as e:
             print(str(e))
-            print(msg)
+            #print(msg)
 
     def close(self):
         self._file.close()
@@ -38,32 +40,39 @@ class mavlink_server(gnss_interface):
         self._itime = self._gtime
         self.write()
         self._addr = address
+        self._nparse = nmea_parser()
         
-    def new_gnss(self,msg):
-        self._gtime = time.time() * 1e6
-        self._gmsg = {'time_usec':msg[0]*1e6,
-                      'lat':msg[2]*1e7,
-                      'lon':msg[3]*1e7,
-                      'alt':msg[4]*1e3,
-                      'eph':9999,
-                      'epv':9999,
-                      'cog':0,
-                      'fix_type':msg[5],
-                      'satellites_visible':msg[6],
-                      'alt_ellipsoid':0,
-                      'h_acc':0,
-                      'v_acc':0,
-                      'vel_acc':0,
-                      'yaw':0}
+    def new_gnss(self,t,msg):
+        try:
+            parsed = self._nparse.parse(msg.decode())
+            self._gtime = t * 1e6
+            self._gmsg = {'time_usec':parsed.time*1e6,
+                        'lat':parsed.lat*1e7,
+                        'lon':parsed.lon*1e7,
+                        'alt':parsed.lat*1e3,
+                        'eph':9999,
+                        'epv':9999,
+                        'cog':0,
+                        'fix_type':parsed.quality,
+                        'satellites_visible':parsed.numSV,
+                        'alt_ellipsoid':0,
+                        'h_acc':0,
+                        'v_acc':0,
+                        'vel_acc':0,
+                        'yaw':0}
+        except Exception as e:
+            print(self.__class__.__name__,str(e))
 
+        self.write()
+        
     def write(self):
         t = time.time()
         if t - self._gtime > 1:
             self._gmsg = 'null'
         if t- self._itime > 1:
             self._imsg = 'null'
-        j = json.dumps({'GPS_RAW_INT':{'msg':self._gmsg},
-                        'ATTITUDE':{'msg':self._imsg} })
+        j = json.dumps({'GPS_RAW_INT':{'msg':self._gmsg,'index':1,'time_usec':self._gtime*1e6},
+                        'ATTITUDE':{'msg':self._imsg,'index':1,'time_usec':self._itime*1e6} })
 
         with open(self._file + '.json','w') as file:
             file.write(j)

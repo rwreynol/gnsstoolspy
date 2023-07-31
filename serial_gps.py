@@ -1,4 +1,4 @@
-from gnss_stream import serial_gnss
+from gnss_stream import locosys_gnss, serial_gnss
 
 import yaml
 import time
@@ -14,8 +14,10 @@ def main():
         print('error reading settings')
         return 0
     
-    gps = serial_gnss(port=settings['gnss']['connection']['port'],
+    gps = locosys_gnss(port=settings['gnss']['connection']['port'],
                       baud=settings['gnss']['connection']['baud'])
+    #gps = serial_gnss(port=settings['gnss']['connection']['port'],
+    #                  baud=settings['gnss']['connection']['baud'])
     
     gps.start()
 
