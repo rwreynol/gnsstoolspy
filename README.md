@@ -1,9 +1,13 @@
-Positioning Solutions
+# postoolspy
+Global positioning solutions using combined GNSS and IMU.
 
-Supported GNSS Receivers
-1) ZED-F9P
+## Supported GNSS Receivers for RTK
+1) u-blox 
+    - ZED-F9P
+    - NEO-M8P
 2) Locosys
-3) NMEA String Serial GPS
+    - RTK1612-EVK
+3) RTK over UART/USB
 
-Supported IMUs
-N/A
+## Supported IMUs
+1) None
