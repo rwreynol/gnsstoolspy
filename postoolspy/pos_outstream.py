@@ -4,21 +4,34 @@ import json
 import time
 from gnss_nmea import nmea_parser
 
-
 class positiong_outstream(gnss_interface):
+    '''
+    positioning output stream object
+    '''
 
     def __init__(self):
+        ''' 
+        constructor
+        '''
         pass
 
 class positioning_file(positiong_outstream):
+    '''
+    output file for positioning
+    '''
 
     def __init__(self,filename):
+        '''
+        constructor for positioning output file
+        '''
         self._name = filename
-
         self._file = open(self._name,'w')
         #self._file.write('cpu_time,timestamp,lat_deg,lon_deg,alt_m,fix,num_sats\r\n')
 
     def new_gnss(self,t,msg):
+        '''
+        handle new gnss message
+        '''
         try:
             self._file.write( '%f %s' % (t,msg.decode()) )
         except Exception as e:
@@ -26,9 +39,15 @@ class positioning_file(positiong_outstream):
             #print(msg)
 
     def close(self):
+        '''
+        closes the file
+        '''
         self._file.close()
 
 class mavlink_server(gnss_interface):
+    '''
+    mission planner mavlink server replication object
+    '''
     _file = 'mavlink'
     _gmsg = 'null'
     _imsg = 'null'
@@ -36,6 +55,9 @@ class mavlink_server(gnss_interface):
     _itime = 0
 
     def __init__(self,address):
+        '''
+        constructor
+        '''
         self._gtime = 0
         self._itime = self._gtime
         self.write()
@@ -43,6 +65,9 @@ class mavlink_server(gnss_interface):
         self._nparse = nmea_parser()
         
     def new_gnss(self,t,msg):
+        '''
+        handles new gnss
+        '''
         try:
             parsed = self._nparse.parse(msg.decode())
             self._gtime = t * 1e6
@@ -63,21 +88,29 @@ class mavlink_server(gnss_interface):
         except Exception as e:
             print(self.__class__.__name__,str(e))
 
+        # write message to string
         self.write()
         
     def write(self):
-        t = time.time()
+        '''
+        writes the gnss and imu data to local json file
+        '''
+        t = time.time()# computer timestamp
         if t - self._gtime > 1:
             self._gmsg = 'null'
         if t- self._itime > 1:
             self._imsg = 'null'
         j = json.dumps({'GPS_RAW_INT':{'msg':self._gmsg,'index':1,'time_usec':self._gtime*1e6},
                         'ATTITUDE':{'msg':self._imsg,'index':1,'time_usec':self._itime*1e6} })
-
+        
+        # write file
         with open(self._file + '.json','w') as file:
             file.write(j)
         
     def run(self):
+        '''
+        server thread
+        '''
         http = HTTPServer( self._addr, mavlink_server_request)
 
         try:
@@ -86,8 +119,14 @@ class mavlink_server(gnss_interface):
             print('User terminated Webserver')
 
 class mavlink_server_request(BaseHTTPRequestHandler):
+    '''
+    server request override
+    '''
 
     def do_GET(self):
+        '''
+        handles get response
+        '''
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()

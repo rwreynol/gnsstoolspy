@@ -5,9 +5,15 @@ from socketserver import StreamRequestHandler, ThreadingTCPServer
 import base64
 
 class ntrip_server(ThreadingTCPServer):
+    '''
+    ntrip server
+    '''
     nclients = 0
 
     def __init__(self,usr,pw,mountpoint,position,maxclients=1,*args,**kwargs):
+        '''
+        overrite ntrip server 
+        '''
         super().__init__(*args, **kwargs)
         self.max_clients = maxclients
         self.credentials = self.credentials(usr,pw)
@@ -15,6 +21,9 @@ class ntrip_server(ThreadingTCPServer):
         self.mountpoint = mountpoint
 
     def credentials(self,user,password):
+        '''
+        check the credentials
+        '''
         creds = user + ':' + password
         return base64.b64encode(creds.encode('ascii')).decode('ascii')
 
@@ -29,9 +38,15 @@ class ntrip_handler(StreamRequestHandler):
         }
 
     def __init__(self,*args,**kwargs):
+        '''
+        constructor
+        '''
         super().__init__(*args, **kwargs)
 
     def header(self,code):
+        '''
+        ntrip header
+        '''
         dat = datetime.now(timezone.utc)
         server_date = dat.strftime("%d %b %Y")
         http_date = dat.strftime("%a, %d %b %Y %H:%M:%S %Z")
@@ -46,6 +61,9 @@ class ntrip_handler(StreamRequestHandler):
         return header
 
     def sourcetable(self):
+        '''
+        sourcetable
+        '''
         ipaddr='127.0.0.1'
         port=2101
         lat=43
@@ -66,6 +84,9 @@ class ntrip_handler(StreamRequestHandler):
                 )
 
     def response(self):
+        '''
+        handles ntrip response
+        '''
         return self.header(400) + ('Connection: close\r\n' + 
                 'Transfer-Encoding: chunked\r\n' +
                 'Content-Type: gnss/data\r\n'+
@@ -73,6 +94,9 @@ class ntrip_handler(StreamRequestHandler):
                 'Pragma: no-cache\r\n\r\n')
 
     def handle(self):
+        '''
+        handles ntrip 
+        '''
         data = self.request.recv(1024).decode('ascii').splitlines()
         print("Recieved one request from {}".format(self.client_address[0]))
 
