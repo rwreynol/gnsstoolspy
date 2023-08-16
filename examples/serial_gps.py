@@ -1,4 +1,4 @@
-from gnss_stream import locosys_gnss, serial_gnss
+from postoolspy.gnss_stream import locosys_gnss, serial_gnss
 
 import yaml
 import time

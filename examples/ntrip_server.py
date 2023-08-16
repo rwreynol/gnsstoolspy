@@ -1,5 +1,5 @@
-from gnss_ntrip import ntrip_server, ntrip_handler
-from gnss_corrections import ntrip_corrections
+from postoolspy.gnss_ntrip import ntrip_server, ntrip_handler
+from postoolspy.gnss_corrections import ntrip_corrections
 
 import yaml
 

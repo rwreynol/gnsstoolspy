@@ -1,4 +1,4 @@
-from gnss_corrections import ntrip_corrections
+from postoolspy.gnss_corrections import ntrip_corrections
 
 import time
 import yaml

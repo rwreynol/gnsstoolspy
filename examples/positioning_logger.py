@@ -1,5 +1,5 @@
-from positioning_outstream import positioning_file
-from gnss_stream import serial_gnss
+from postoolspy.pos_outstream import positioning_file
+from postoolspy.gnss_stream import serial_gnss
 
 import time
 import yaml

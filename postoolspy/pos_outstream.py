@@ -100,7 +100,3 @@ class mavlink_server_request(BaseHTTPRequestHandler):
             
         self.wfile.write(bytes("<html><head><title>Simulated Mission Planner Webserver</title></head>", "utf-8"))
         self.wfile.write(bytes(resp, "utf-8"))
-
-if __name__ == '__main__':
-    serv = mavlink_server(('0.0.0.0',56781))
-    serv.run()

@@ -1,5 +1,5 @@
-from positioning_outstream import mavlink_server
-from gnss_stream import serial_gnss
+from postoolspy.pos_outstream import mavlink_server
+from postoolspy.gnss_stream import serial_gnss
 
 import time
 import yaml
