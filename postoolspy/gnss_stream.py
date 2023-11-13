@@ -1,6 +1,6 @@
 from threading import Thread
 from pyubx2 import UBXReader
-from gnss_corrections import corrections_interface
+from .gnss_corrections import corrections_interface
 
 import math
 
@@ -139,9 +139,9 @@ class serial_gnss(gnss):
         connects to the serial port
         '''
         try:
+            print('Connected to (%s:%d)' % (self._port,self._baud))
             self._conn = serial.Serial(self._port,self._baud)
             self._connected = True
-            print('Connected to (%s:%d)' % (self._port,self._baud))
         except Exception as e:
             print(str(e))
             print('Error connecting to serial gps')
@@ -166,9 +166,9 @@ class serial_gnss(gnss):
         '''
         try:
             (raw,msg) = self._parser.read()# read the serial port
+            if not hasattr(msg,'msgID'): return (None,None)
             t = time.time()# computer timestamp
             if msg.msgID == 'GGA':# ensure nmea string
-                print(raw)# output the raw data
                 return (t,raw)
                 #if not msg.lat:
                 #    return (t,raw)#(time.time(),msg.time,math.nan,math.nan,math.nan,msg.quality,0)
@@ -176,7 +176,8 @@ class serial_gnss(gnss):
             else:
                 return (t,None)# return nothing
         except Exception as e:
-            print(self.__class__.__name__ + ' ' + str(e))
+            print('Error receiving GNSS data. ' + 
+                  self.__class__.__name__ + ' ' + str(e))
             return (None,None)
         
     def write(self,msg):
@@ -206,8 +207,6 @@ class ublox_zedf9p(serial_gnss):
         # need to enable NMEA, set data rate and 
         pass
 
-
-
 class locosys_gnss(serial_gnss):
     '''
     locosys gps over serial
@@ -231,10 +230,15 @@ class locosys_gnss(serial_gnss):
         # send all commands
         for cmd in cmds:
             string = '$%s*%X\r\n' % (cmd,self.checksum(cmd))
-            self._conn.flush()
-            self._conn.write(string.encode('utf-8'))
-            line = self._conn.readline().decode('utf-8').strip()
-            print(string,line)
+            try:
+                self._conn.flush()
+                print('Writing %s' % string)
+                self._conn.write(string.encode('utf-8'))
+                line = self._conn.readline().decode('utf-8').strip()
+                print(string,line)
+            except Exception as e:
+                print('Error configuring Locosys',str(e))
+        
 
         # finish the setup
         super().setup()

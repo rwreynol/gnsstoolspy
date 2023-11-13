@@ -1,8 +1,10 @@
-from gnss_stream import gnss_interface
+from .gnss_stream import gnss_interface
+from .imu_stream import imu_interface
+from .gnss_nmea import nmea_parser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import time
-from gnss_nmea import nmea_parser
+import socket
 
 class positiong_outstream(gnss_interface):
     '''
@@ -26,7 +28,15 @@ class positioning_file(positiong_outstream):
         '''
         self._name = filename
         self._file = open(self._name,'w')
-        #self._file.write('cpu_time,timestamp,lat_deg,lon_deg,alt_m,fix,num_sats\r\n')
+
+    def new_imu(self,t,msg):
+        '''
+        handle new gnss message
+        '''
+        try:
+            self._file.write( '%f %s' % (t,msg.decode()) )
+        except Exception as e:
+            print(str(e))
 
     def new_gnss(self,t,msg):
         '''
@@ -36,7 +46,6 @@ class positioning_file(positiong_outstream):
             self._file.write( '%f %s' % (t,msg.decode()) )
         except Exception as e:
             print(str(e))
-            #print(msg)
 
     def close(self):
         '''
@@ -44,7 +53,26 @@ class positioning_file(positiong_outstream):
         '''
         self._file.close()
 
-class mavlink_server(gnss_interface):
+class udp_server(gnss_interface,imu_interface):
+
+    def __init__(self,dest):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.dest = dest
+
+    def new_imu(self,t,msg):
+        msg = b'%.6f' % t + msg
+        #print(msg,self.dest)
+        self.sock.sendto(msg,self.dest)
+
+    def new_gnss(self,t,msg):
+        msg = b'%.6f' % t + msg
+        print(msg,self.dest)
+        self.sock.sendto(msg,self.dest)
+
+    def close(self):
+        self.sock.close()
+
+class mavlink_server(gnss_interface,imu_interface):
     '''
     mission planner mavlink server replication object
     '''
@@ -90,6 +118,21 @@ class mavlink_server(gnss_interface):
 
         # write message to string
         self.write()
+
+    def new_imu(self,t,msg):
+        try:
+            parsed = self._nparse.parse(msg.decode())
+            #print(t,parsed)
+            self._itime = t * 1e6
+            self._imsg = {'time_usec':0,
+                        'yaw':parsed.yaw,
+                        'pitch':parsed.pitch,
+                        'roll':parsed.roll,}
+        except Exception as e:
+            print(self.__class__.__name__,str(e))
+
+        self.write()
+
         
     def write(self):
         '''

@@ -17,7 +17,8 @@ Global positioning solutions using combined GNSS and IMU.
 3) NMEA over USB
 
 ### IMU
-1) None
+1) Vectornav
+    - 100
 
 ### SLAM
 1) None

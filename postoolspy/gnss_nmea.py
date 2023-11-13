@@ -20,12 +20,15 @@ class nmea_parser:
             msgid = re.findall(r'\$(.*?),',string)[0]
             chksm = re.findall(r'\*(.*?)\s',string)[0]
             calc_chksm = self.checksum(string)
+            #print(msgid,chksm,calc_chksm)
 
             if chksm != calc_chksm:
                 print('Checksums dont match')
                 return nmea_result()  
             elif bool(re.search(r'G[NPL]GGA',msgid)):# parse gga string
                 return self._parse_gga(string)
+            elif msgid == 'IMU':# parse gga string
+                return self._parse_imu(string)
             else:
                 print('Unknown NMEA identifier')
                 return nmea_result()
@@ -33,6 +36,13 @@ class nmea_parser:
         except Exception as e:
             print(str(e))
             return nmea_result()
+        
+    def _parse_imu(self,string):
+        info = re.split(r',',string.strip())
+        yaw = float(info[1])
+        pitch = float(info[2])
+        roll = float(info[3][0:-3])
+        return nmea_result(identity='IMU',yaw=yaw,pitch=pitch,roll=roll)
 
     def _parse_gga(self,string):
         '''
