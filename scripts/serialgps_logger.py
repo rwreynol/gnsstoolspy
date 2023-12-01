@@ -3,11 +3,14 @@ from postoolspy.gnss_stream import serial_gnss
 
 import time
 import yaml
+import os
 
 def main():
     settings = None
+
+    file = os.path.join(os.path.dirname(__file__),'ulema-h.yaml')
     
-    with open('settings.yaml','r') as file:
+    with open(file,'r') as file:
         settings = yaml.safe_load(file)
         print(settings)
 

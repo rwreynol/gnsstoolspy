@@ -3,32 +3,41 @@ from postoolspy.pos_outstream import udp_server
 import time
 import yaml
 import sys
-port = 'COM3'
-baud = 115200
+import os
 
-settings = None
-    
-with open('settings.yaml','r') as file:
-    settings = yaml.safe_load(file)
-    print(settings)
+def main():
+        
+    settings = None
 
-if settings == None:
-    sys.exit(1)
+    file = os.path.join(os.path.dirname(__file__),'settings.yaml')
+        
+    with open(file,'r') as file:
+        settings = yaml.safe_load(file)
+        print(settings)
 
-imu = vectornav_imu(port,baud)
-imu.start()
+    if settings == None:
+        sys.exit(1)
 
-dest = ('127.0.0.1',56781) 
-serv = udp_server( dest )
-imu.add_listener(serv)
+    port = settings['imu']['connection']['port']
+    baud = settings['imu']['connection']['baud']
 
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    pass
+    imu = vectornav_imu(port,baud)
+    imu.start()
 
-imu.stop()
+    dest = ('127.0.0.1',56781) 
+    serv = udp_server( dest )
+    imu.add_listener(serv)
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+
+    imu.stop()
+
+if __name__ == '__main__':
+    main()
 
 
 #serv.close()

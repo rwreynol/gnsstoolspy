@@ -2,11 +2,14 @@ from postoolspy.gnss_stream import locosys_gnss, serial_gnss
 
 import yaml
 import time
+import os
 
 def main():
     settings = None
+
+    file = os.path.join(os.path.dirname(__file__),'settings.yaml')
     
-    with open('settings.yaml','r') as file:
+    with open(file,'r') as file:
         settings = yaml.safe_load(file)
         print(settings)
 

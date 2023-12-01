@@ -1,15 +1,20 @@
+import postoolspy
 from postoolspy.imu_stream import vectornav_imu
 from postoolspy.gnss_stream import locosys_gnss
 from postoolspy.pos_outstream import udp_server
 from postoolspy.gnss_corrections import ntrip_corrections
+
 import time
 import yaml
 import sys
+import os
 
 def main():
     settings = None
+
+    file = os.path.join(os.path.dirname(__file__),'ulema-h.yaml')
         
-    with open('ulema-h.yaml','r') as file:
+    with open(file,'r') as file:
         settings = yaml.safe_load(file)
         print(settings)
 
@@ -28,7 +33,8 @@ def main():
     
 
     gps = locosys_gnss(settings['gnss']['connection']['port'],
-                       settings['gnss']['connection']['baud'])
+                       settings['gnss']['connection']['baud'],
+                       rate=10)
     
     dest = (settings['output']['connection']['address'],
             settings['output']['connection']['port'])

@@ -2,12 +2,15 @@ from postoolspy.gnss_corrections import ntrip_corrections
 
 import time
 import yaml
+import os
 
 def main():
 
     settings = None
 
-    with open('settings.yaml','r') as file:
+    file = os.path.join(os.path.dirname(__file__),'settings.yaml')
+
+    with open(file,'r') as file:
         settings = yaml.safe_load(file)
         print(settings)
 
