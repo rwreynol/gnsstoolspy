@@ -3,6 +3,7 @@ from pyrtcm import RTCMReader
 
 import socket
 import base64
+import time
 
 class corrections_interface(object):
 
@@ -45,10 +46,22 @@ class gnss_corrections(Thread):
         #while self._connected:
         rtr = RTCMReader(self._conn)
 
+        t0 = time.time()
+        dt = 1
+
+        buffer = bytearray()
+
         while self._connected:
             (raw,msg) = rtr.read()
             print('Received RTCM' + msg.identity)
-            self.send_rtcm(raw)
+
+            buffer = buffer + raw
+
+            if (time.time() - t0) > dt:
+                t0 = t0 + dt
+                print('Sending %d bytes' % len(buffer))
+                self.send_rtcm(buffer)
+                buffer = bytearray()
 
         self.disconnect()
 
