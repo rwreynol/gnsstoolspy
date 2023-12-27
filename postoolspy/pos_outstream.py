@@ -43,6 +43,7 @@ class positioning_file(positiong_outstream):
         handle new gnss message
         '''
         try:
+            print('%f %s' % (t,msg.decode().strip()))
             self._file.write( '%f %s' % (t,msg.decode()) )
         except Exception as e:
             print(str(e))

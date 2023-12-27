@@ -53,14 +53,14 @@ class gnss_corrections(Thread):
 
         while self._connected:
             (raw,msg) = rtr.read()
-            print('Received RTCM' + msg.identity)
+            #print('Received RTCM' + msg.identity)
 
             buffer = buffer + raw
 
             if (time.time() - t0) > dt:
                 t0 = t0 + dt
                 print('Sending %d bytes' % len(buffer))
-                self.send_rtcm(buffer)
+                #self.send_rtcm(buffer)
                 buffer = bytearray()
 
         self.disconnect()
@@ -95,6 +95,7 @@ class ntrip_corrections(gnss_corrections):
     def connect(self):
         print('Attempting to connect to %s' % str(self._addr))
         self._conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._conn.settimeout(1)
         self._conn.connect(self._addr)
         self._conn.send(self._header)
         resp = self.receive().decode(self.ENCODING)

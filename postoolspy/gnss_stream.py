@@ -141,6 +141,8 @@ class serial_gnss(gnss):
         try:
             print('Connected to (%s:%d)' % (self._port,self._baud))
             self._conn = serial.Serial(self._port,self._baud)
+            self._conn.timeout = 0.10
+            self._conn.write_timeout = 0.050
             self._connected = True
         except Exception as e:
             print(str(e))
@@ -186,6 +188,9 @@ class serial_gnss(gnss):
         '''
         try:
             self._conn.write(msg)
+            #time.sleep(0.010)
+            #self._conn.reset_output_buffer()
+            self._conn.flush()
         except Exception as e:
             print(self.__class__.__name__ + ' ' + str(e))
 
@@ -224,6 +229,15 @@ class locosys_gnss(serial_gnss):
         cmds = ['PAIR410,1', # enable SBAS
                 'PAIR400,1', # DGPS = RTCM
                 'PAIR104,1', # dual band
+                'PAIR062,0,1',# disable non gga messages
+                'PAIR062,1,0',
+                'PAIR062,2,0',
+                'PAIR062,3,0',
+                'PAIR062,4,0',
+                'PAIR062,5,0',
+                'PAIR062,6,0',
+                'PAIR062,7,0',
+                'PAIR062,8,0',
                 'PAIR050,%d' % rate # rate
                 ]
         
