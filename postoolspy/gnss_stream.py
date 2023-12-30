@@ -167,9 +167,9 @@ class serial_gnss(gnss):
         Receive new message
         '''
         try:
+            t = time.time()# computer timestamp
             (raw,msg) = self._parser.read()# read the serial port
             if not hasattr(msg,'msgID'): return (None,None)
-            t = time.time()# computer timestamp
             if msg.msgID == 'GGA':# ensure nmea string
                 return (t,raw)
                 #if not msg.lat:

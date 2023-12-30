@@ -89,10 +89,10 @@ class vectornav_imu(imu):
 
     def receive(self):
         try:
+            t = time.time()
             ypr = self._conn.read_yaw_pitch_roll()
             nmea = 'IMU,%f,%f,%f' % (ypr.x,ypr.y,ypr.z)
             nmea = '$%s*%X\r\n' % (nmea,self.checksum(nmea))
-            t = time.time()
             return (t,nmea.encode('utf-8') )
         except Exception as e:
             print(self.__class__.__name__ + ' ' + str(e))
