@@ -16,22 +16,22 @@ def main():
         return
     
     addr = (settings['server']['address'],settings['server']['port'])
-    server = ntrip_server(settings['server']['user'],
-                          settings['server']['password'],
-                          settings['server']['mountpoint'],
+    server = ntrip_server('randall;',
+                          'password',
+                          'WRJ',
                           (settings['server']['lat'],settings['server']['lon']),
                            1,addr,ntrip_handler)
     
-    gnss_cors = ntrip_corrections(settings['corrections']['connection']['address'],
-                                  settings['corrections']['connection']['mountpoint'],
-                                  settings['corrections']['connection']['user'],
-                                  settings['corrections']['connection']['password'],
-                                  settings['corrections']['connection']['port'],
+    gnss_cors = ntrip_corrections('127.0.0.1',
+                                  'WRJ',
+                                  'randall',
+                                  'password',
+                                  2101,
                                   org='EMSG')
     gnss_cors.start()
 
     try:
-        server.serve_forever()
+        server.serve_forever()        
     except KeyboardInterrupt:
         print('User Teminating Server')
     

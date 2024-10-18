@@ -1,6 +1,7 @@
 from .gnss_stream import gnss_interface
 from .imu_stream import imu_interface
 from .gnss_nmea import nmea_parser
+from .gnss_corrections import gnss_corrections
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import time
@@ -54,7 +55,7 @@ class positioning_file(positiong_outstream):
         '''
         self._file.close()
 
-class udp_server(gnss_interface,imu_interface):
+class pos_udpserver(gnss_interface,imu_interface,gnss_corrections):
 
     def __init__(self,dest):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -68,6 +69,9 @@ class udp_server(gnss_interface,imu_interface):
     def new_gnss(self,t,msg):
         msg = b'%.6f' % t + msg
         print(msg,self.dest)
+        self.sock.sendto(msg,self.dest)
+
+    def new_rtcm(self,msg):
         self.sock.sendto(msg,self.dest)
 
     def close(self):

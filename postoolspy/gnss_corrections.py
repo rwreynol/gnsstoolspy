@@ -4,6 +4,7 @@ from pyrtcm import RTCMReader
 import socket
 import base64
 import time
+import math
 
 class corrections_interface(object):
 
@@ -41,27 +42,30 @@ class gnss_corrections(Thread):
 
         self.connect()
 
-        print('Connected: %s' % str(self._connected))
-
+        #print('Connected: %s' % str(self._connected))
         #while self._connected:
         rtr = RTCMReader(self._conn)
 
-        t0 = time.time()
-        dt = 1
+        #t0 = time.time()
+        #dt = 1
 
-        buffer = bytearray()
+        #buffer = bytearray()
 
         while self._connected:
             (raw,msg) = rtr.read()
             #print('Received RTCM' + msg.identity)
 
-            buffer = buffer + raw
+            #print(msg)
 
-            if (time.time() - t0) > dt:
-                t0 = t0 + dt
-                print('Sending %d bytes' % len(buffer))
-                #self.send_rtcm(buffer)
-                buffer = bytearray()
+            if raw is not None:
+                self.send_rtcm(raw) 
+
+            #buffer = buffer + raw
+            #if (time.time() - t0) > dt:
+            #    t0 = t0 + dt
+            #    print('Sending %d bytes' % len(buffer))
+            #    self.send_rtcm(buffer)
+            #    buffer = bytearray()
 
         self.disconnect()
 
@@ -99,11 +103,13 @@ class ntrip_corrections(gnss_corrections):
         self._conn.connect(self._addr)
         self._conn.send(self._header)
         resp = self.receive().decode(self.ENCODING)
-        print(resp)
+        #print(resp)
 
         for line in resp.split():
             if 'OK' in line:
                 self._connected = True
+                print('Connected to NTRIP Server %s:%d' % 
+                      (self._addr[0],self._addr[1]))
                 break
 
     def receive(self):
@@ -116,3 +122,26 @@ class ntrip_corrections(gnss_corrections):
         self._conn.close()
         print('Closed %s' % str(self._addr))
         super().__init__()
+
+class rtcm_udpcast(corrections_interface):
+
+    prefix = ['','k','M','G','T']
+    multiplier = [1,1e-3,1e-6,1e-9,1e-12]
+
+    def __init__(self,dest,port):
+        super().__init__()
+        self.dest = (dest,port)
+        print('Creating UDP Broadcaster to %s:%d' % self.dest)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._bytes = 0
+
+    def new_rtcm(self,msg):
+        self._bytes += len(msg)
+        self.sock.sendto(msg,self.dest)
+        idx = math.floor(math.log10(self._bytes)/3)
+        prefix = self.prefix[idx]
+        digits = self._bytes * self.multiplier[idx]
+        print('Read %7.3f%s bytes' % (digits,prefix),end='\r')
+
+    def close(self):
+        print('')
