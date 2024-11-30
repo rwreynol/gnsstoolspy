@@ -3,7 +3,6 @@ from pyrtcm import RTCMReader
 
 import socket
 import base64
-import time
 import math
 
 class corrections_interface(object):

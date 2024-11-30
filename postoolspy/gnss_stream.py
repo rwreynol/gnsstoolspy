@@ -18,6 +18,35 @@ class gnss_interface(object):
         '''
         pass
 
+class gnss_file(gnss_interface):
+
+    def __init__(self,filename='nmea.txt',verbose=True):
+        super().__init__()
+
+        self.file = open(filename,'wa')
+        self.errored = False
+        self._verbose = verbose
+
+    def new_gnss(self,t,msg):
+        if self.errored: return
+
+        try:
+            string = '%.6f %s' % (t,msg.strip())
+            self.file.write( (string + '\n').encode() )
+
+            if self._verbose:
+                print(('\r' + string),end='')
+        except:
+            self.errored = True
+            print('Error writing to file')
+
+    def close(self):
+        try:
+            self.file.close()
+        except:
+            print('Error closing file')
+
+
 class gnss(Thread,corrections_interface):
     '''
     gnss object thread to collect output computer and write correction data
@@ -31,6 +60,7 @@ class gnss(Thread,corrections_interface):
         self._conn = None # connection
         self._connected = False # connected flag
         self._listeners = [] # listeners 
+        self.rtcmBytesRecvd = 0
 
     def add_listener(self,listener):
         '''
@@ -50,6 +80,7 @@ class gnss(Thread,corrections_interface):
         '''
         new_rtcm method to override
         '''
+        self._rtcmRecvd += len(msg)
         self.write(msg)
 
     def connect(self):
